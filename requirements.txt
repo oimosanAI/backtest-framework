@@ -1,0 +1,19 @@
+# Core numerical / data stack
+numpy>=2.0
+pandas>=2.2
+
+# Live price data (notebook only; the test-suite never hits the network)
+yfinance>=0.2
+
+# Plotting for the study notebook
+matplotlib>=3.8
+
+# Notebook runtime for notebooks/strategy_vs_benchmark_SPY.ipynb
+jupyter>=1.0
+
+# Testing
+pytest>=8.0
+
+# Formatting & linting
+black>=24.0
+ruff>=0.5

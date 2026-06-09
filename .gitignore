@@ -1,0 +1,25 @@
+# Virtual environment
+venv/
+
+# Claude Code config
+.claude/
+
+# Data files
+data/
+*.csv
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Environment / secrets
+.env
+
+# VSCode
+.vscode/
+
+# OS
+.DS_Store

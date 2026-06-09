@@ -1,0 +1,21 @@
+[project]
+name = "backtest-framework"
+version = "0.1.0"
+description = "A backtesting framework focused on the rigour of validation."
+requires-python = ">=3.10"
+
+[tool.black]
+line-length = 88
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/F: pyflakes + pycodestyle, I: import sorting, UP: pyupgrade,
+# B: bugbear, SIM: simplifications. A pragmatic, strict-but-sane set.
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
