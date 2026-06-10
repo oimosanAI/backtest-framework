@@ -43,6 +43,18 @@ class TestCleanPrices:
         with pytest.raises(data.DataError):
             data.clean_prices(raw)
 
+    def test_all_nan_series_reports_no_valid_data(self) -> None:
+        """An all-NaN series must say "no valid observations", not the
+        misleading "interior gap" message."""
+        raw = pd.Series([float("nan")] * 3, index=_index(3))
+        with pytest.raises(data.DataError, match="no valid"):
+            data.clean_prices(raw)
+
+    def test_empty_series_reports_no_valid_data(self) -> None:
+        raw = pd.Series([], dtype=float)
+        with pytest.raises(data.DataError, match="no valid"):
+            data.clean_prices(raw)
+
 
 class TestLoadPrices:
     def _install_fake_yfinance(self, monkeypatch, frame: pd.DataFrame) -> None:

@@ -111,10 +111,16 @@ def clean_prices(prices: pd.Series, name: str | None = None) -> pd.Series:
     Raises
     ------
     DataError
-        If interior gaps remain or any price is non-positive.
+        If the series has no valid observations, interior gaps remain, or any
+        price is non-positive.
     """
     cleaned = prices.astype(float).sort_index()
     cleaned = cleaned[~cleaned.index.duplicated(keep="last")]
+
+    # An empty or all-NaN series has no valid prices at all; report that
+    # directly rather than falling through to the "interior gap" message.
+    if cleaned.first_valid_index() is None:
+        raise DataError("price series contains no valid (non-NaN) observations.")
 
     # Trim NaNs at the ends (common when a ticker's history starts mid-range),
     # then any remaining NaN is an interior gap we refuse to silently fill.

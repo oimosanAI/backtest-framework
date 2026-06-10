@@ -41,6 +41,28 @@ def test_monotonic_increase_goes_and_stays_long() -> None:
     assert result.equity_curve.iloc[-1] > 1.0
 
 
+def test_nan_signals_are_treated_as_flat() -> None:
+    """A strategy that emits NaN (e.g. an indicator warm-up) must produce flat
+    positions and finite P&L, never NaN poisoning the equity curve."""
+
+    class NaNWarmupStrategy:
+        name = "nan-warmup"
+
+        def generate_signals(self, prices: pd.Series) -> pd.Series:
+            signal = pd.Series(1.0, index=prices.index)
+            signal.iloc[:10] = float("nan")  # NaN warm-up
+            signal.iloc[30] = float("nan")  # and an interior NaN
+            return signal
+
+    prices = pd.Series([100.0 * (1.005**i) for i in range(60)], index=_index(60))
+    result = run_backtest(prices, NaNWarmupStrategy())
+    assert not result.positions.isna().any()
+    assert not result.returns.isna().any()
+    assert not result.equity_curve.isna().any()
+    # The NaN bars are flat: an interior NaN signal means no position next bar.
+    assert result.positions.iloc[31] == 0.0
+
+
 def test_single_data_point_does_not_crash() -> None:
     """One observation: no return is computable, output is flat and finite."""
     prices = pd.Series([100.0], index=_index(1))

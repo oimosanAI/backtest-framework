@@ -186,7 +186,7 @@ def bootstrap_statistic(
     ValueError
         If ``returns`` has fewer than two observations, ``n_resamples`` is not
         positive, ``confidence_level`` is outside ``(0, 1)``, or ``block_size``
-        is not positive.
+        is not positive or exceeds the number of observations.
 
     Notes
     -----
@@ -206,6 +206,15 @@ def bootstrap_statistic(
     n = len(r)
     if n < 2:
         raise ValueError("need at least two observations to bootstrap")
+    if block_size > n:
+        # With block_size > n every "block" would be the whole sample, so each
+        # resample reproduces the original series and the interval collapses
+        # to a point -- a silently meaningless result. Refuse loudly instead.
+        raise ValueError(
+            f"block_size ({block_size}) must not exceed the number of "
+            f"observations ({n}); a block larger than the sample makes every "
+            "resample identical to the original series"
+        )
 
     point = float(statistic(r))
     values = r.to_numpy()
@@ -549,7 +558,8 @@ def best_strategy_permutation_test(
     ------
     ValueError
         If no candidates are supplied, any candidate fails to align to
-        ``returns``, or ``n_permutations`` is not positive.
+        ``returns``, ``n_permutations`` is not positive, or the statistic is
+        undefined for every candidate.
     """
     if len(positions_list) == 0:
         raise ValueError("need at least one candidate strategy")
@@ -572,6 +582,14 @@ def best_strategy_permutation_test(
             for j in range(len(positions_list))
         ]
     )
+    if not np.isfinite(observed_scores).any():
+        # np.nanargmax on an all-NaN array raises a cryptic "All-NaN slice"
+        # error; explain what actually went wrong instead.
+        raise ValueError(
+            "the statistic is undefined (NaN) for every candidate's P&L; "
+            "check that the positions are not all flat and the statistic is "
+            "well-defined on these returns"
+        )
     best_index = int(np.nanargmax(observed_scores))
     observed_best = float(observed_scores[best_index])
 

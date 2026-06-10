@@ -144,6 +144,26 @@ class TestBootstrap:
         assert (a.lower, a.upper) == (b.lower, b.upper)
         assert np.array_equal(a.distribution, b.distribution)
 
+    def test_block_size_exceeding_sample_is_rejected(self) -> None:
+        """A block longer than the sample would make every resample identical
+        to the original series; the call must fail loudly, not degenerate."""
+        rng = np.random.default_rng(0)
+        returns = pd.Series(rng.normal(0.0, 0.01, 50), index=_index(50))
+        with pytest.raises(ValueError, match="block_size"):
+            bootstrap_statistic(returns, n_resamples=10, block_size=51, seed=0)
+
+    def test_block_size_equal_to_sample_is_allowed(self) -> None:
+        rng = np.random.default_rng(0)
+        returns = pd.Series(rng.normal(0.0, 0.01, 50), index=_index(50))
+        res = bootstrap_statistic(
+            returns,
+            statistic=lambda r: float(r.mean()),
+            n_resamples=10,
+            block_size=50,
+            seed=0,
+        )
+        assert np.isfinite(res.point_estimate)
+
 
 class TestMultipleTesting:
     """Corrections for having tried many strategies."""
@@ -174,3 +194,13 @@ class TestMultipleTesting:
         )
         assert res.p_value > 0.10
         assert 0 <= res.best_index < 15
+
+    def test_all_undefined_candidates_raise_clearly(self) -> None:
+        """All-flat candidates have an undefined Sharpe on every P&L; the test
+        must explain that, not crash with an "All-NaN slice" error."""
+        rng = np.random.default_rng(0)
+        n = 100
+        returns = pd.Series(rng.normal(0.0, 0.01, n), index=_index(n))
+        flat = [pd.Series(0.0, index=_index(n)) for _ in range(3)]
+        with pytest.raises(ValueError, match="undefined"):
+            best_strategy_permutation_test(flat, returns, n_permutations=10, seed=0)
