@@ -8,8 +8,9 @@ yfinance>=0.2
 # Plotting for the study notebook
 matplotlib>=3.8
 
-# Notebook runtime for notebooks/strategy_vs_benchmark_SPY.ipynb
+# Notebook runtime + the nbformat API used by the notebooks/_build_*.py scripts
 jupyter>=1.0
+nbformat>=5.0
 
 # Testing
 pytest>=8.0
